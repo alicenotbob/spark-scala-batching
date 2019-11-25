@@ -8,13 +8,13 @@ import org.apache.spark.sql.expressions.Window
 
 object SparkBatching {
 
-  private val HDFS_ROOT = "hdfs://localhost:8020/"
-  private val EXPEDIA_PATH = "user/uladzislau/expedia/"
+  private val HDFS_ROOT = sys.env.getOrElse("HDFS_ROOT", "hdfs://sandbox-hdp.hortonworks.com:8020/")
+  private val EXPEDIA_PATH = sys.env.getOrElse("EXPEDIA_PATH", "user/uladzislau/expedia/")
 
   val spark = SparkSession
       .builder()
-      .appName("spark-batching")
       .master("local[*]")
+      .appName("spark-batching")
       .getOrCreate()
 
   import spark.implicits._
@@ -32,7 +32,7 @@ object SparkBatching {
       .as[HotelForecast](Encoders.product[HotelForecast])
   }
 
-  def readExpediaData: DataFrame = spark.read.format("avro").schema(EXPEDIA_SCHEMA).load(HDFS_ROOT + EXPEDIA_PATH)
+  def readExpediaData: DataFrame = spark.read.format("com.databricks.spark.avro").schema(EXPEDIA_SCHEMA).load(HDFS_ROOT + EXPEDIA_PATH)
 
   def calculateIdleDaysForEveryHotel(expedia: DataFrame): DataFrame = {
     val id = expedia("id")
@@ -73,10 +73,10 @@ object SparkBatching {
     validExpedia
       .select($"*", year($"srch_ci") as "check_in_year")
       .write
-      .format("avro")
+      .format("com.databricks.spark.avro")
       .mode(SaveMode.Overwrite)
       .partitionBy("check_in_year")
-      .save(HDFS_ROOT + EXPEDIA_PATH + "../spark_batching_valid_expedia/")
+      .save(sys.env.getOrElse("RESULT_PATH", HDFS_ROOT + EXPEDIA_PATH + "../spark_batching_valid_expedia/"))
   }
 
   def main(args: Array[String]): Unit = {

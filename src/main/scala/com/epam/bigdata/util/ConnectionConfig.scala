@@ -1,10 +1,16 @@
 package com.epam.bigdata.util
 
 object ConnectionConfig {
-    val KAFKA_CONNECTION_CONFIG: Map[String, String] = Map(
-      "kafka.bootstrap.servers" -> "sandbox-hdp.hortonworks.com:6667",
-      "subscribe" -> "hotels_forecast_formatted_2",
-      "startingOffsets" -> """{"hotels_forecast_formatted_2":{"0":0}}""",
-      "endingOffsets" -> """{"hotels_forecast_formatted_2":{"0":63813003}}"""
+
+  def KAFKA_CONNECTION_CONFIG: Map[String, String] = {
+    val bootstrapServer: String = sys.env.getOrElse("KAFKA_BOOTSTRAP_SERVER", "sandbox-hdp.hortonworks.com:6667")
+    val kafkaTopic: String = sys.env.getOrElse("KAFKA_TOPIC", "hotels_forecast")
+    val lastIndex: String = sys.env.getOrElse("LAST_INDEX", "63813003")
+    Map(
+      "kafka.bootstrap.servers" -> bootstrapServer,
+      "subscribe" -> kafkaTopic,
+      "startingOffsets" -> s"""{"$kafkaTopic":{"0":0}}""",
+      "endingOffsets" -> s"""{"$kafkaTopic":{"0":$lastIndex}}"""
     )
+  }
 }
